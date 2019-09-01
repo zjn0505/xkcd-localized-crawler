@@ -139,6 +139,21 @@ app.get('/refresh', (req, res) => {
 		})
 })
 
+app.get('/info.0.json', (req, res) => {
+	const index = Object.keys(cnList).pop()
+	res.json(cnList[index])
+})
+
+app.get('/:comicId(\\d+)/info.0.json', (req, res) => {
+	const id = req.params.comicId
+	console.log("Req specific comic " + id)
+	if (cnList[id] != null && cnList[id] != undefined) {
+		res.json(cnList[id])
+	} else {
+		res.sendStatus(500)
+	}
+})
+
 app.listen(port)
 
 const updateCnListFromMLab = () => {
