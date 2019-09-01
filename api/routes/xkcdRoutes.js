@@ -14,4 +14,7 @@ exports.route = app => {
 
     app.route('/refresh')
         .get(xkcdReqs.refreshNew)
+
+    app.route('/archive')
+        .get(xkcdReqs.archive)
 }

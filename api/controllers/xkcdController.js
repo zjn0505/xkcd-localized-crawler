@@ -79,3 +79,11 @@ exports.refreshNew = (req, res) => {
 			console.error(e)
 		})
 }
+
+exports.archive = (req, res) => {
+    const cnList = xkcdInFetcher.getCnList()
+    var html = "<ul>"
+    Object.keys(cnList).reverse().map(it => cnList[it]).map(it => `<li><a href=${it.img}> ${it.num} - ${it.title}</a></li>`).map(it => html = html + it)
+    html = html + "</ul>"
+    res.send(html)
+}
