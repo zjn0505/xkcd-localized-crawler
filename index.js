@@ -41,7 +41,7 @@ const loadLinksFromPageIndex = x => {
 		})
 }
 
-const loadSingleComicFromLink = link => {
+const loadSingleComicFromXkcdIn = link => {
 	return rp(link).then(cheerio.load)
 		.then($ => {
 			const title = $("#content h1").text()
@@ -86,12 +86,12 @@ const saveToMLab = jsonarray => {
 		})
 }
 
-const updateCnListFromXkcdIn = list => {
+const updateCnListFromXkcdIn = (list, forceAll) => {
 	console.log("1=====================  " + list.length)
 	list = list.filter(it => it != null && it != undefined)
 	console.log("2=====================  " + list.length)
 	list = list.filter(it => {
-		if (cnList[it.num] != null && cnList[it.num] != undefined) {
+		if (cnList[it.num] != null && cnList[it.num] != undefined && !forceAll) {
 			return false
 		} else {
 			cnList[it.num] = it
@@ -102,22 +102,30 @@ const updateCnListFromXkcdIn = list => {
 	return list
 }
 
-const refresh = () => rp(xkcdCNUrl)
+const filterBasedOnForceFlag = (list, forceAll) => {
+	if (forceAll) {
+		return list
+	} else {
+		return list.filter(it => cnList[it.num] != null && cnList[it.num] != undefined)
+	}
+}
+
+const refresh = forceAll => rp(xkcdCNUrl)
 	.then(cheerio.load)
 	.then(extractTotalIndicesFromMainHtml)
 	.then(totalPages => [...Array(totalPages).keys()])
 	.then(pageArray => pageArray.map(loadLinksFromPageIndex))
 	.then(x => Promise.all(x))
 	.then(x => [].concat(...x)) // list of all 179 comics links
-	.then(x => x.map(loadSingleComicFromLink))
+	.then(x => filterBasedOnForceFlag(x, forceAll))
+	.then(x => x.map(loadSingleComicFromXkcdIn))
 	.then(x => Promise.all(x))
-	.then(updateCnListFromXkcdIn)
+	.then(x => updateCnListFromXkcdIn(x, forceAll))
 	.then(saveToMLab)
 	.catch(console.error)
 
-
 app.get('/refresh', (req, res) => {
-	refresh()
+	refresh(false)
 		.then(_ => {
 			console.log("Refreshed succeed")
 			res.status = 200
@@ -140,6 +148,7 @@ const updateCnListFromMLab = () => {
 	}
 	rp(options).then(x =>{
 		// console.log(x)
+		console.log("Sync with mLab finished")
 		x.map(it => cnList[it.num] = it)
 	}).catch(console.eror)
 }
