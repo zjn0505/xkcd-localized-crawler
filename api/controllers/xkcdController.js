@@ -46,23 +46,6 @@ exports.updateCnListFromMLab = () => {
     }).catch(console.eror)
 }
 
-exports.latestJson = (req, res) => {
-    const cnList = xkcdInFetcher.getCnList()
-    const index = Object.keys(cnList).pop()
-    res.json(cnList[index])
-}
-
-exports.specificJson = (req, res) => {
-    const id = req.params.comicId
-	console.log("Req specific comic " + id)
-    const cnList = xkcdInFetcher.getCnList()
-	if (cnList[id] != null && cnList[id] != undefined) {
-		res.json(cnList[id])
-	} else {
-		res.sendStatus(500)
-	}
-}
-
 exports.refreshNew = (req, res) => {
     refresh(false)
 		.then(_ => {
@@ -70,7 +53,7 @@ exports.refreshNew = (req, res) => {
             const totalNum = xkcdInFetcher.getTotalNum()
 			console.log("Refreshed succeed")
 			res.status = 200
-			res.send("Refreshed succeed, current total num is " + totalNum + ". There are " + Object.keys(cnList).length + " comics saved.")
+			res.send(`Refreshed succeed, current total num is ${totalNum}. There are ${Object.keys(cnList).length} comics saved.`)
 			return
 		})
 		.catch(e => {
@@ -86,4 +69,39 @@ exports.archive = (req, res) => {
     Object.keys(cnList).reverse().map(it => cnList[it]).map(it => `<li><a href=${it.img}> ${it.num} - ${it.title}</a></li>`).map(it => html = html + it)
     html = html + "</ul>"
     res.send(html)
+}
+
+exports.pageJson = (req, res) => {
+    const comicId = req.params.comicId
+    const cnList = xkcdInFetcher.getCnList()
+    var comic
+    if (comicId == undefined) {
+        const index = Object.keys(cnList).pop()
+        comic = cnList[index]
+    } else {
+        comic = cnList[comicId]
+    }
+    if (comic != null && comic != undefined) {
+        res.send(comic)
+    } else {
+        res.sendStatus(400)
+    }
+}
+
+exports.page = (req, res) => {
+    const comicId = req.params.comicId
+    const cnList = xkcdInFetcher.getCnList()
+    var comic
+    if (comicId == undefined) {
+        const index = Object.keys(cnList).pop()
+        comic = cnList[index]
+    } else {
+        comic = cnList[comicId]
+    }
+    if (comic != null && comic != undefined) {
+        var html = `<h1>${comic.num} - ${comic.title}</h1><img src="${comic.img}" title="${comic.title}" alt="${comic.alt}"/>`
+        res.send(html)
+    } else {
+        res.sendStatus(404)
+    }
 }

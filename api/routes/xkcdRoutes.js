@@ -6,15 +6,15 @@ exports.route = app => {
 
     xkcdReqs.updateCnListFromMLab()
 
-    app.route('/info.0.json')
-        .get(xkcdReqs.latestJson)
-
-    app.route('/:comicId(\\d+)/info.0.json')
-        .get(xkcdReqs.specificJson)
-
     app.route('/refresh')
         .get(xkcdReqs.refreshNew)
 
     app.route('/archive')
         .get(xkcdReqs.archive)
+
+    app.route('/:comicId(\\d+)?/info.0.json')
+        .get(xkcdReqs.pageJson)
+
+    app.route('/:comicId(\\d+)?')
+        .get(xkcdReqs.page)
 }
