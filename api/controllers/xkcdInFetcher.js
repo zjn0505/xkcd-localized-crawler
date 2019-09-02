@@ -70,7 +70,10 @@ const filterBasedOnForceFlag = (list, forceAll) => {
 	if (forceAll) {
 		return list
 	} else {
-		return list.filter(it => cnList[it.num] != null && cnList[it.num] != undefined)
+		return list.filter(it => {
+            const id = querystring.parse(url.parse(it).query).id
+            return cnList[id] == null || cnList[id] == undefined
+        })
 	}
 }
 

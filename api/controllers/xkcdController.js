@@ -30,7 +30,7 @@ const saveToMLab = jsonarray => {
 		})
 }
 
-const refresh = forceAll => xkcdInFetcher.refresh()
+const refresh = forceAll => xkcdInFetcher.refresh(forceAll)
     .then(saveToMLab)
     .catch(console.error)
 
