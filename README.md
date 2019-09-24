@@ -8,6 +8,14 @@ Crawler for xkcd.in
 - `/refresh`
 
   Synchronize with xkcd.in site to parse all unknown comics.
+  
+  * **URL Params**
+
+| Name | Required | Type  | Description |
+| ---  | :---:    | ---   | ---         |
+|forcedAll|        |Integer| 1 to force update all |
+| index |          |Integer| force update specific comic |
+
 
 - `/archive`
 
