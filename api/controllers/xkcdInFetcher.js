@@ -3,8 +3,8 @@ const cheerio = require("cheerio"),
 	rp = require("request-promise"),
 	url = require('url'),
 	config = require('config'),
-    querystring = require("querystring")
-    
+	querystring = require("querystring")
+
 const xkcdCNUrl = "http://xkcd.in/"
 
 var totalNum
@@ -71,9 +71,9 @@ const filterBasedOnForceFlag = (list, forceAll) => {
 		return list
 	} else {
 		return list.filter(it => {
-            const id = querystring.parse(url.parse(it).query).id
-            return cnList[id] == null || cnList[id] == undefined
-        })
+			const id = querystring.parse(url.parse(it).query).id
+			return cnList[id] == null || cnList[id] == undefined
+		})
 	}
 }
 
@@ -94,14 +94,23 @@ const updateCnListUponXkcdInList = (list, forceAll) => {
 	return list
 }
 
-exports.refresh = forceAll => rp(xkcdCNUrl)
-    .then(cheerio.load)
-    .then(extractTotalIndicesFromMainHtml)
-    .then(totalPages => [...Array(totalPages).keys()])
-    .then(pageArray => pageArray.map(loadLinksFromPageIndex))
-    .then(x => Promise.all(x))
-    .then(x => [].concat(...x)) // list of all 179 comics links
-    .then(x => filterBasedOnForceFlag(x, forceAll))
-    .then(x => x.map(loadSingleComicFromXkcdIn))
-    .then(x => Promise.all(x))
-    .then(x => updateCnListUponXkcdInList(x, forceAll))
+exports.refresh = (forceAll, index) => {
+	console.log("index is " + index)
+	if (index == -1) {
+		return rp(xkcdCNUrl)
+			.then(cheerio.load)
+			.then(extractTotalIndicesFromMainHtml)
+			.then(totalPages => [...Array(totalPages).keys()])
+			.then(pageArray => pageArray.map(loadLinksFromPageIndex))
+			.then(x => Promise.all(x))
+			.then(x => [].concat(...x)) // list of all 179 comics links
+			.then(x => filterBasedOnForceFlag(x, forceAll))
+			.then(x => x.map(loadSingleComicFromXkcdIn))
+			.then(x => Promise.all(x))
+			.then(x => updateCnListUponXkcdInList(x, forceAll))
+	} else {
+		return loadSingleComicFromXkcdIn(xkcdCNUrl + "comic?lg=cn&id=" + index)
+			.then(Array.of)
+			.then(x => updateCnListUponXkcdInList(x, true))
+	}
+}
