@@ -62,7 +62,7 @@ const filterBasedOnForceFlag = (list, forceAll) => {
 		return list
 	} else {
 		return list.filter(it => {
-			const id = querystring.parse(url.parse(it).query).id
+			const id = it.num
 			return cnList[id] == null || cnList[id] == undefined
 		})
 	}
@@ -94,6 +94,7 @@ exports.refresh = (forceAll, index) => {
 		return rp(xkcdTwUrl)
 			.then(cheerio.load)
 			.then(extractRawArchiveFromMainHtml)
+			.then(x => filterBasedOnForceFlag(x, forceAll))
 			.then(x => x.map(loadSingleComicFromXkcdTw))
 			.then(x => Promise.all(x))
 			.then(x => updateLocalListUponXkcdTwList(x, forceAll))

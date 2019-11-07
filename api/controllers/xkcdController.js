@@ -108,7 +108,13 @@ exports.refreshNew = (req, res) => {
 }
 
 exports.archive = (req, res) => {
-    const cnList = xkcdInFetcher.getLocalList()
+    let iFetcher
+    if (req.query.locale == "zh-tw") {
+        iFetcher = xkcdTwFetcher
+    } else {
+        iFetcher = xkcdInFetcher
+    }
+    const cnList = iFetcher.getLocalList()
     var html = "<ul>"
     Object.keys(cnList).reverse().map(it => cnList[it]).map(it => `<li><a href=${it.img}> ${it.num} - ${it.title}</a></li>`).map(it => html = html + it)
     html = html + "</ul>"
@@ -116,8 +122,14 @@ exports.archive = (req, res) => {
 }
 
 exports.pageJson = (req, res) => {
+    let iFetcher
+    if (req.query.locale == "zh-tw") {
+        iFetcher = xkcdTwFetcher
+    } else {
+        iFetcher = xkcdInFetcher
+    }
     const comicId = req.params.comicId
-    const cnList = xkcdInFetcher.getLocalList()
+    const cnList = iFetcher.getLocalList()
     var comic
     if (comicId == undefined) {
         const index = Object.keys(cnList).pop()
@@ -133,8 +145,14 @@ exports.pageJson = (req, res) => {
 }
 
 exports.page = (req, res) => {
+    let iFetcher
+    if (req.query.locale == "zh-tw") {
+        iFetcher = xkcdTwFetcher
+    } else {
+        iFetcher = xkcdInFetcher
+    }
     const comicId = req.params.comicId
-    const cnList = xkcdInFetcher.getLocalList()
+    const cnList = iFetcher.getLocalList()
     var comic
     if (comicId == undefined) {
         const index = Object.keys(cnList).pop()
