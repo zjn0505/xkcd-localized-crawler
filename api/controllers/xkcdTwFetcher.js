@@ -30,7 +30,7 @@ const extractRawArchiveFromMainHtml = $ => {
 	return comicHrefList
 }
 
-// load comic object from single xkcd.in page
+// load comic object from single xkcd.tw page
 const loadSingleComicFromXkcdTw = item => {
 	console.log("Loading " + item.num)
 	if (item.num == "1190") {
@@ -56,7 +56,7 @@ const loadSingleComicFromXkcdTw = item => {
 		})
 }
 
-// Filter xkcd.in fetched list for single comic page query
+// Filter xkcd.tw fetched list for single comic page query
 const filterBasedOnForceFlag = (list, forceAll) => {
 	if (forceAll) {
 		return list
