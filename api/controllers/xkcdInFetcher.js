@@ -10,9 +10,11 @@ const xkcdCNUrl = "http://xkcd.in/"
 var totalNum
 var cnList = {}
 
-exports.getCnList = () => cnList
+exports.getLocalList = () => cnList
 
 exports.getTotalNum = () => totalNum
+
+exports.mLabUrl = config.mLabUrl
 
 // parse xkcd.in html for total pages
 const extractTotalIndicesFromMainHtml = $ => {

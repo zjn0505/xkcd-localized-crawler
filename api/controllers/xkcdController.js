@@ -4,17 +4,18 @@ const cheerio = require("cheerio"),
     url = require('url'),
     config = require('config'),
     querystring = require("querystring"),
-    xkcdInFetcher = require('./xkcdInFetcher')
+    xkcdInFetcher = require('./xkcdInFetcher'),
+    xkcdTwFetcher = require('./xkcdTwFetcher')
 
 const mLabUrl = config.mLabUrl
 
-const saveToMLab = jsonarray => {
+const saveToMLab = (jsonarray, iFetcher) => {
     if (jsonarray == null || jsonarray == undefined || jsonarray.length == 0) {
         return Promise.resolve()
     }
     console.log("Find sth new")
-    // console.log(jsonarray)
-    let upsertUrl = mLabUrl + `&q={"_id":{"$in":[${jsonarray.map(x => '"'+x._id+'"')}]}}` // TODO Stupid String convert
+    console.log(jsonarray)
+    let upsertUrl = iFetcher.mLabUrl + `&q={"_id":{"$in":[${jsonarray.map(x => '"'+x._id+'"')}]}}` // TODO Stupid String convert
     console.log(upsertUrl)
 
     const options = {
@@ -28,25 +29,41 @@ const saveToMLab = jsonarray => {
         })
         .catch(e => {
             console.error("Failed to save to mLab")
-            // console.error(e)
+            console.error(e)
         })
     return jsonarray
 }
 
-const refresh = (forceAll, index) => xkcdInFetcher.refresh(forceAll, index)
-    .then(saveToMLab)
+const refresh = (forceAll, index, iFetcher) => iFetcher.refresh(forceAll, index)
+    .then(jsonArray => saveToMLab(jsonArray, iFetcher))
     .catch(console.error)
 
-exports.updateCnListFromMLab = () => {
+exports.updateLocalListFromMLab = () => {
     const options = {
-        uri: mLabUrl,
+        uri: config.mLabUrl,
+        json: true
+    }
+    const optionsTW = {
+        uri: config.mLabUrlTW,
         json: true
     }
     rp(options).then(x => {
-        // console.log(x)
-        console.log("Sync with mLab finished")
-        x.map(it => xkcdInFetcher.getCnList()[it.num] = it)
-    }).catch(console.eror)
+            if (x && x instanceof Array) {
+                console.log("CNLIST " + x.length)
+            }
+            console.log("Sync with mLab finished")
+            x.map(it => xkcdInFetcher.getLocalList()[it.num] = it)
+        }).then(x => rp(optionsTW))
+        .then(x => {
+            if (x && x instanceof Array) {
+                console.log("TWLIST " + x.length)
+            }
+            console.log("Sync with TW mLab finished")
+            if (x) {
+                x.map(it => xkcdTwFetcher.getLocalList()[it.num] = it)
+            }
+        })
+        .catch(console.eror)
 }
 
 exports.refreshNew = (req, res) => {
@@ -55,16 +72,31 @@ exports.refreshNew = (req, res) => {
     if (!index) {
         index = -1
     }
-    refresh(forceAll, index)
+
+    let iFetcher
+    if (req.query.locale == "zh-tw") {
+        iFetcher = xkcdTwFetcher
+    } else {
+        iFetcher = xkcdInFetcher
+    }
+
+    refresh(forceAll, index, iFetcher)
         .then(results => {
-            const cnList = xkcdInFetcher.getCnList()
-            const totalNum = xkcdInFetcher.getTotalNum()
+            let list, totalNum
+            if (req.query.locale == "zh-tw") {
+                console.log("zh-TW list")
+                list = iFetcher.getLocalList()
+                totalNum = iFetcher.getTotalNum()
+            } else {
+                list = iFetcher.getLocalList()
+                totalNum = iFetcher.getTotalNum()
+            }
             console.log("Refreshed succeed")
             res.status = 200
             if (index != -1) {
                 res.send(`Comic No.${index} has been updated. ${JSON.stringify(results)}`)
             } else {
-                res.send(`Refreshed succeed, current total num is ${totalNum}. There are ${Object.keys(cnList).length} comics saved.`)
+                res.send(`Refreshed succeed, current total num is ${totalNum}. There are ${Object.keys(list).length} comics saved.`)
             }
             return
         })
@@ -76,7 +108,7 @@ exports.refreshNew = (req, res) => {
 }
 
 exports.archive = (req, res) => {
-    const cnList = xkcdInFetcher.getCnList()
+    const cnList = xkcdInFetcher.getLocalList()
     var html = "<ul>"
     Object.keys(cnList).reverse().map(it => cnList[it]).map(it => `<li><a href=${it.img}> ${it.num} - ${it.title}</a></li>`).map(it => html = html + it)
     html = html + "</ul>"
@@ -85,7 +117,7 @@ exports.archive = (req, res) => {
 
 exports.pageJson = (req, res) => {
     const comicId = req.params.comicId
-    const cnList = xkcdInFetcher.getCnList()
+    const cnList = xkcdInFetcher.getLocalList()
     var comic
     if (comicId == undefined) {
         const index = Object.keys(cnList).pop()
@@ -102,7 +134,7 @@ exports.pageJson = (req, res) => {
 
 exports.page = (req, res) => {
     const comicId = req.params.comicId
-    const cnList = xkcdInFetcher.getCnList()
+    const cnList = xkcdInFetcher.getLocalList()
     var comic
     if (comicId == undefined) {
         const index = Object.keys(cnList).pop()
