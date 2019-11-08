@@ -1,9 +1,6 @@
 'use strict';
-const cheerio = require("cheerio"),
-    rp = require("request-promise"),
-    url = require('url'),
+const rp = require("request-promise"),
     config = require('config'),
-    querystring = require("querystring"),
     xkcdInFetcher = require('./xkcdInFetcher'),
     xkcdTwFetcher = require('./xkcdTwFetcher')
 
