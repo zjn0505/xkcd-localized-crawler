@@ -45,7 +45,7 @@ const loadLinksFromPageIndex = x => {
 
 // load comic object from single xkcd.in page
 const loadSingleComicFromXkcdIn = link => {
-	return rp(link).then(cheerio.load)
+	return rp(xkcdCNUrl.slice(0, -1) + link).then(cheerio.load)
 		.then($ => {
 			const title = $("#content h1").text()
 			var img = $(".comic-body img").attr().src
