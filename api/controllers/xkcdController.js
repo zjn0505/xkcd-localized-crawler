@@ -2,7 +2,8 @@
 const rp = require("request-promise"),
     config = require('config'),
     xkcdInFetcher = require('./xkcdInFetcher'),
-    xkcdTwFetcher = require('./xkcdTwFetcher')
+    xkcdTwFetcher = require('./xkcdTwFetcher'),
+    xkcdeFetcher = require('./xkcdeFetcher')
 
 const mLabUrl = config.mLabUrl
 
@@ -33,34 +34,54 @@ const saveToMLab = (jsonarray, iFetcher) => {
 
 const refresh = (forceAll, index, iFetcher) => iFetcher.refresh(forceAll, index)
     .then(jsonArray => saveToMLab(jsonArray, iFetcher))
-    .catch(console.error)
+// .catch(console.error)
+
+const getFetcher = req => {
+    let iFetcher
+    if (req.query.locale == "de") {
+        iFetcher = xkcdeFetcher
+    } else if (req.query.locale == "zh-tw") {
+        iFetcher = xkcdTwFetcher
+    } else {
+        iFetcher = xkcdInFetcher
+    }
+    return iFetcher
+}
 
 exports.updateLocalListFromMLab = () => {
-    const options = {
-        uri: config.mLabUrl,
-        json: true
-    }
-    const optionsTW = {
-        uri: config.mLabUrlTW,
-        json: true
-    }
-    rp(options).then(x => {
-            if (x && x instanceof Array) {
-                console.log("CNLIST " + x.length)
+    var requests = Object.keys(config)
+        .filter(key => key.startsWith("mLabUrl"))
+        .map(key => config[key])
+        .map(mLabUrl => {
+            return {
+                uri: mLabUrl,
+                json: true
             }
-            console.log("Sync with mLab finished")
-            x.map(it => xkcdInFetcher.getLocalList()[it.num] = it)
-        }).then(x => rp(optionsTW))
+        }).map(rp)
+    Promise.all(requests)
         .then(x => {
-            if (x && x instanceof Array) {
-                console.log("TWLIST " + x.length)
-            }
-            console.log("Sync with TW mLab finished")
-            if (x) {
-                x.map(it => xkcdTwFetcher.getLocalList()[it.num] = it)
-            }
-        })
-        .catch(console.eror)
+            x.forEach((results, index) => {
+                if (results && results instanceof Array) {
+                    var region = "CN"
+                    if (index == 1) {
+                        region = "TW"
+                    } else if (index == 2) {
+                        region = "DE"
+                    }
+                    console.log("LIST " + region + " " + results.length)
+                }
+                console.log("Sync with mLab finished")
+                results.map(it => {
+                    if (index == 0) {
+                        xkcdInFetcher.getLocalList()[it.num] = it
+                    } else if (index == 1) {
+                        xkcdTwFetcher.getLocalList()[it.num] = it
+                    } else if (index == 2) {
+                        xkcdeFetcher.getLocalList()[it.num] = it
+                    }
+                })
+            })
+        }).catch(console.error)
 }
 
 exports.refreshNew = (req, res) => {
@@ -70,24 +91,13 @@ exports.refreshNew = (req, res) => {
         index = -1
     }
 
-    let iFetcher
-    if (req.query.locale == "zh-tw") {
-        iFetcher = xkcdTwFetcher
-    } else {
-        iFetcher = xkcdInFetcher
-    }
+    let iFetcher = getFetcher(req)
 
     refresh(forceAll, index, iFetcher)
         .then(results => {
             let list, totalNum
-            if (req.query.locale == "zh-tw") {
-                console.log("zh-TW list")
-                list = iFetcher.getLocalList()
-                totalNum = iFetcher.getTotalNum()
-            } else {
-                list = iFetcher.getLocalList()
-                totalNum = iFetcher.getTotalNum()
-            }
+            list = iFetcher.getLocalList()
+            totalNum = iFetcher.getTotalNum()
             console.log("Refreshed succeed")
             res.status = 200
             if (index != -1) {
@@ -105,12 +115,7 @@ exports.refreshNew = (req, res) => {
 }
 
 exports.archive = (req, res) => {
-    let iFetcher
-    if (req.query.locale == "zh-tw") {
-        iFetcher = xkcdTwFetcher
-    } else {
-        iFetcher = xkcdInFetcher
-    }
+    let iFetcher = getFetcher(req)
     const cnList = iFetcher.getLocalList()
     var html = "<ul>"
     Object.keys(cnList).reverse().map(it => cnList[it]).map(it => `<li><a href=${it.img}> ${it.num} - ${it.title}</a></li>`).map(it => html = html + it)
@@ -119,12 +124,7 @@ exports.archive = (req, res) => {
 }
 
 exports.pageJson = (req, res) => {
-    let iFetcher
-    if (req.query.locale == "zh-tw") {
-        iFetcher = xkcdTwFetcher
-    } else {
-        iFetcher = xkcdInFetcher
-    }
+    let iFetcher = getFetcher(req)
     const comicId = req.params.comicId
     const cnList = iFetcher.getLocalList()
     var comic
@@ -142,12 +142,7 @@ exports.pageJson = (req, res) => {
 }
 
 exports.page = (req, res) => {
-    let iFetcher
-    if (req.query.locale == "zh-tw") {
-        iFetcher = xkcdTwFetcher
-    } else {
-        iFetcher = xkcdInFetcher
-    }
+    let iFetcher = getFetcher(req)
     const comicId = req.params.comicId
     const cnList = iFetcher.getLocalList()
     var comic
