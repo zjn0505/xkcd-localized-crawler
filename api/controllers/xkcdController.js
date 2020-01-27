@@ -3,7 +3,8 @@ const rp = require("request-promise"),
     config = require('config'),
     xkcdInFetcher = require('./xkcdInFetcher'),
     xkcdTwFetcher = require('./xkcdTwFetcher'),
-    xkcdeFetcher = require('./xkcdeFetcher')
+    xkcdeFetcher = require('./xkcdeFetcher'),
+    xkcdFrFetcher = require('./xkcdFrFetcher')
 
 const mLabUrl = config.mLabUrl
 
@@ -42,6 +43,8 @@ const getFetcher = req => {
         iFetcher = xkcdeFetcher
     } else if (req.query.locale == "zh-tw") {
         iFetcher = xkcdTwFetcher
+    } else if (req.query.locale == "fr") {
+        iFetcher = xkcdFrFetcher
     } else {
         iFetcher = xkcdInFetcher
     }
@@ -67,6 +70,8 @@ exports.updateLocalListFromMLab = () => {
                         region = "TW"
                     } else if (index == 2) {
                         region = "DE"
+                    } else if (index == 3) {
+                        region = "FR"
                     }
                     console.log("LIST " + region + " " + results.length)
                 }
@@ -78,6 +83,8 @@ exports.updateLocalListFromMLab = () => {
                         xkcdTwFetcher.getLocalList()[it.num] = it
                     } else if (index == 2) {
                         xkcdeFetcher.getLocalList()[it.num] = it
+                    } else if (index == 3) {
+                        xkcdFrFetcher.getLocalList()[it.num] = it
                     }
                 })
             })
