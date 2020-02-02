@@ -4,16 +4,13 @@ const rp = require("request-promise"),
     xkcdInFetcher = require('./xkcdInFetcher'),
     xkcdTwFetcher = require('./xkcdTwFetcher'),
     xkcdeFetcher = require('./xkcdeFetcher'),
-    xkcdFrFetcher = require('./xkcdFrFetcher')
+    xkcdFrFetcher = require('./xkcdFrFetcher'),
+    xkcdEsFetcher = require('./xkcdEsFetcher'),
+    xkcdRuFetcher = require('./xkcdRuFetcher')
 
 const mLabUrl = config.mLabUrl
 
-const saveToMLab = (jsonarray, iFetcher) => {
-    if (jsonarray == null || jsonarray == undefined || jsonarray.length == 0) {
-        return Promise.resolve()
-    }
-    console.log("Find sth new")
-    console.log(jsonarray)
+const execMLabSave = (jsonarray, iFetcher) => {
     let upsertUrl = iFetcher.mLabUrl + `&q={"_id":{"$in":[${jsonarray.map(x => '"'+x._id+'"')}]}}` // TODO Stupid String convert
     console.log(upsertUrl)
 
@@ -24,12 +21,30 @@ const saveToMLab = (jsonarray, iFetcher) => {
         json: true
     };
     rp(options).then(body => {
-            // console.log(body)
+            console.log(body)
         })
         .catch(e => {
             console.error("Failed to save to mLab")
             console.error(e)
         })
+}
+
+const saveToMLab = (jsonarray, iFetcher) => {
+    if (jsonarray == null || jsonarray == undefined || jsonarray.length == 0) {
+        return Promise.resolve()
+    }
+    console.log("Find sth new")
+    console.log(jsonarray)
+    if (jsonarray.length > 300) {
+        var processArray = jsonarray
+        var remainArray
+        while (processArray.length > 300) {
+            remainArray = processArray.splice(300)
+            execMLabSave(processArray, iFetcher)
+            processArray = remainArray
+        }
+        execMLabSave(processArray, iFetcher)
+    }
     return jsonarray
 }
 
@@ -45,6 +60,10 @@ const getFetcher = req => {
         iFetcher = xkcdTwFetcher
     } else if (req.query.locale == "fr") {
         iFetcher = xkcdFrFetcher
+    } else if (req.query.locale == "es") {
+        iFetcher = xkcdEsFetcher
+    } else if (req.query.locale == "ru") {
+        iFetcher = xkcdRuFetcher
     } else {
         iFetcher = xkcdInFetcher
     }
@@ -72,6 +91,10 @@ exports.updateLocalListFromMLab = () => {
                         region = "DE"
                     } else if (index == 3) {
                         region = "FR"
+                    } else if (index == 4) {
+                        region = "ES"
+                    } else if (index == 5) {
+                        region = "RU"
                     }
                     console.log("LIST " + region + " " + results.length)
                 }
@@ -85,6 +108,10 @@ exports.updateLocalListFromMLab = () => {
                         xkcdeFetcher.getLocalList()[it.num] = it
                     } else if (index == 3) {
                         xkcdFrFetcher.getLocalList()[it.num] = it
+                    } else if (index == 4) {
+                        xkcdEsFetcher.getLocalList()[it.num] = it
+                    } else if (index == 5) {
+                        xkcdRuFetcher.getLocalList()[it.num] = it
                     }
                 })
             })
@@ -160,7 +187,7 @@ exports.page = (req, res) => {
         comic = cnList[comicId]
     }
     if (comic != null && comic != undefined) {
-        var html = `<h1>${comic.num} - ${comic.title}</h1><img src="${comic.img}" title="${comic.title}" alt="${comic.alt}"/>`
+        var html = `<h1>${comic.num} - ${comic.title}</h1><img src="${comic.img}" title="${comic.alt}" alt="${comic.title}"/>`
         res.send(html)
     } else {
         res.sendStatus(404)

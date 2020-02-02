@@ -2,8 +2,7 @@
 const cheerio = require("cheerio"),
 	rp = require("request-promise"),
 	url = require('url'),
-	config = require('config'),
-	querystring = require("querystring")
+	config = require('config')
 
 const xkcdeUrl = "https://xkcde.dapete.net/"
 

@@ -2,8 +2,7 @@
 const cheerio = require("cheerio"),
 	rp = require("request-promise"),
 	url = require('url'),
-	config = require('config'),
-	querystring = require("querystring")
+	config = require('config')
 
 const xkcdFrUrl = "https://xkcd.lapin.org/"
 
@@ -67,6 +66,9 @@ exports.refresh = (forceAll, index) => {
 				}
 			})
 			.then(x => Promise.all(x))
+			.then(x => {
+				return Object.keys(frList).map((key) => frList[key]) 
+			})
 	} else {
 		return extractComicFromSinglePage(index)
 	}
