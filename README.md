@@ -1,5 +1,5 @@
-# xkcd-cn-crawler
-Crawler for xkcd.in
+# xkcd-localized-crawler
+Crawler for xkcd.in and more
 
 
 ## APIs
