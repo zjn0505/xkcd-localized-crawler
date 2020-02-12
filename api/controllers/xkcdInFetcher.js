@@ -5,7 +5,7 @@ const cheerio = require("cheerio"),
 	config = require('config'),
 	querystring = require("querystring")
 
-const xkcdCNUrl = "http://xkcd.in/"
+const xkcdCNUrl = "https://xkcd.in/"
 
 var totalNum
 var cnList = {}
