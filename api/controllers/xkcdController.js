@@ -35,16 +35,16 @@ const saveToMLab = (jsonarray, iFetcher) => {
     }
     console.log("Find sth new")
     console.log(jsonarray)
+    var processArray = jsonarray
     if (jsonarray.length > 300) {
-        var processArray = jsonarray
         var remainArray
         while (processArray.length > 300) {
             remainArray = processArray.splice(300)
             execMLabSave(processArray, iFetcher)
             processArray = remainArray
         }
-        execMLabSave(processArray, iFetcher)
     }
+    execMLabSave(processArray, iFetcher)
     return jsonarray
 }
 
