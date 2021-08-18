@@ -8,6 +8,9 @@ const xkcdTwUrl = "https://xkcd.tw/"
 
 var totalNum
 var cnList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "zh-tw"
 
 exports.getLocalList = () => cnList
 
@@ -16,8 +19,9 @@ exports.getTotalNum = () => totalNum
 // parse xkcd.tw html for raw archive
 const extractRawArchiveFromMainHtml = $ => {
 	console.log("WebPage fetched")
-	var comicHrefList = $("a", "div#strip_list")
+	var comicHrefList = $("a", "ul#strip_list")
 	totalNum = comicHrefList.length
+	console.log(totalNum)
 	comicHrefList = comicHrefList.toArray().map(x => {
 		return {
 			"num": x.attribs.href.substr(1),

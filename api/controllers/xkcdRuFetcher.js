@@ -10,6 +10,9 @@ const xkcdRuNumUrl = "https://xkcd.ru/num/"
 
 var totalNum
 var ruList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "ru"
 
 exports.getLocalList = () => ruList
 

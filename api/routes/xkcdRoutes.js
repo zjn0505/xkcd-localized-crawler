@@ -3,6 +3,12 @@
 const xkcdReqs = require('../controllers/xkcdController')
 
 exports.route = app => {
+
+    xkcdReqs.load()
+
+    app.route('/refreshAll')
+        .get(xkcdReqs.refreshAll)
+
     app.route('/refresh')
         .get(xkcdReqs.refreshNew)
 
@@ -14,4 +20,7 @@ exports.route = app => {
 
     app.route('/:comicId(\\d+)?')
         .get(xkcdReqs.page)
+
+    app.route('/state')
+        .get(xkcdReqs.state)
 }

@@ -8,6 +8,9 @@ const xkcdeUrl = "https://xkcde.dapete.net/"
 
 var totalNum
 var deList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "de"
 
 exports.getLocalList = () => deList
 
@@ -31,12 +34,14 @@ const extractLatestIndexFromMainUrl = $ => {
 	deList[max] = comic
 
 	const prev = $(".previous").attr()
-	if (prev) {
+	const hasIt = deList[prev.href.split("/")[1]]
+	if (prev && !hasIt) {
 		const prevUrl = url.resolve(xkcdeUrl, prev.href)
 		return rp(prevUrl)
 			.then(cheerio.load)
 			.then(extractLatestIndexFromMainUrl)
 	} else {
+		totalNum = Object.keys(deList).length
 		return Object.keys(deList).map((key) => deList[key])
 	}
 }

@@ -8,6 +8,9 @@ const xkcdEsArchiveUrl = "https://es.xkcd.com/archive/"
 
 var totalNum
 var esList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "es"
 
 exports.getLocalList = () => esList
 
@@ -150,7 +153,9 @@ const extractInfoFromSinglePage = $ => {
 }
 
 const extractListFromArchiveUrl = $ => {
-	return $("#archive-ul ul").children().map((i, el) => url.resolve(xkcdEsArchiveUrl, $(el).find("a").attr("href"))).toArray()
+	let list = $("#archive-ul ul").children().map((i, el) => url.resolve(xkcdEsArchiveUrl, $(el).find("a").attr("href"))).toArray()
+	totalNum = list.length
+	return list
 }
 
 exports.refresh = (forceAll, index) => {
@@ -159,15 +164,17 @@ exports.refresh = (forceAll, index) => {
 		return rp(xkcdEsArchiveUrl)
 			.then(cheerio.load)
 			.then(extractListFromArchiveUrl)
-			.then(links => links.map(singleLink => {
-				console.log(singleLink)
-				return rp(singleLink).then(cheerio.load)
-			}))
+			.then(links => {
+				console.log(`length ${links.length}`)
+				return links.map(singleLink => {
+					console.log(singleLink)
+					return rp(singleLink).then(cheerio.load)
+				})
+			})
 			.then(x => Promise.all(x))
 			.then(x => [].concat(...x))
 			.then(x => {
 				x.map(extractInfoFromSinglePage)
-				totalNum = esList.length
 				return Object.keys(esList).map((key) => esList[key])
 			})
 	} else {

@@ -1,12 +1,13 @@
 'use strict';
 const rp = require("request-promise"),
-    config = require('config'),
     xkcdInFetcher = require('./xkcdInFetcher'),
     xkcdTwFetcher = require('./xkcdTwFetcher'),
     xkcdeFetcher = require('./xkcdeFetcher'),
     xkcdFrFetcher = require('./xkcdFrFetcher'),
     xkcdEsFetcher = require('./xkcdEsFetcher'),
     xkcdRuFetcher = require('./xkcdRuFetcher')
+
+const fs = require('fs')
 
 const refresh = (forceAll, index, iFetcher) => iFetcher.refresh(forceAll, index)
 
@@ -28,6 +29,92 @@ const getFetcher = req => {
     return iFetcher
 }
 
+exports.load = () => {
+    let iFetchers = [xkcdInFetcher, xkcdTwFetcher, xkcdRuFetcher, xkcdEsFetcher, xkcdFrFetcher, xkcdeFetcher];
+
+    iFetchers.forEach((iFetcher) => {
+        fs.readFile(`./db/${iFetcher.tag()}.json`, 'utf8', (err, data) => {
+            if (err) {
+                console.error(err)
+                return
+            }
+
+            if (data) {
+                let json = JSON.parse(data)
+                iFetcher.cachedNum = json.length
+                console.log(`Locale ${iFetcher.tag()} -  ${json.length}`)
+                json.map(it => {
+                    iFetcher.getLocalList()[it.num] = it
+                })
+            }
+        })
+    })
+}
+
+exports.state = (req, res) => {
+    let iFetchers = [xkcdInFetcher, xkcdTwFetcher, xkcdRuFetcher, xkcdEsFetcher, xkcdFrFetcher, xkcdeFetcher];
+
+    let result = ""
+    iFetchers.forEach((iFetcher) => {
+        result = result + `${iFetcher.tag()} - total - ${iFetcher.getTotalNum()} current - ${Object.keys(iFetcher.getLocalList()).length} ;<br>`
+    })
+    res.status = 200
+    res.send(result)
+}
+
+exports.refreshAll = (req, res) => {
+    let iFetchers = [xkcdInFetcher, xkcdTwFetcher, xkcdRuFetcher, xkcdEsFetcher, xkcdFrFetcher, xkcdeFetcher];
+
+    let index = -1
+
+    Promise.all(iFetchers.map((iFetcher) => {
+            refresh(false, -1, iFetcher)
+                .then(results => {
+                    let list, totalNum
+                    list = iFetcher.getLocalList()
+                    totalNum = iFetcher.getTotalNum()
+                    console.log("Refreshed succeed")
+                    let newLength = Object.keys(list).length
+                    if (iFetcher.cachedNum < newLength) {
+                        iFetcher.cachedNum = newLength
+                        fs.writeFile(`./db/${iFetcher.tag()}.json`, JSON.stringify(Object.values(iFetcher.getLocalList())), err => {
+                            if (err) {
+                                console.error(err)
+                                return
+                            }
+                        })
+                    }
+
+                    // res.status = 200
+                    if (index != -1) {
+                        console.log(`Comic No.${index} has been updated. ${JSON.stringify(results)}`)
+                    } else {
+                        console.log(`Refreshed succeed, current total num is ${totalNum}. There are ${Object.keys(list).length} comics saved.`)
+                    }
+                    return
+                })
+                .catch(e => {
+                    console.log("Refreshed failed, some error happened")
+                    console.error(e)
+                })
+        }))
+        .then(x => [].concat(...x))
+        .then(x => {
+            let result = ""
+            iFetchers.forEach((iFetcher) => {
+                result = result + `${iFetcher.tag()} - total - ${iFetcher.getTotalNum()} current - ${Object.keys(iFetcher.getLocalList()).length} ;<br>`
+            })
+            res.status = 200
+            res.send(result)
+
+        })
+        .catch(e => {
+            console.log("Refreshed failed, some error happened")
+            res.sendStatus(200)
+            console.error(e)
+        })
+}
+
 exports.refreshNew = (req, res) => {
     let forceAll = req.query["forceAll"] == 1 // TODO not well defined since fetch all comics may fail on some.
     let index = req.query["index"]
@@ -35,6 +122,12 @@ exports.refreshNew = (req, res) => {
         index = -1
     }
 
+    let locale = "cn"
+    if (req.query.locale) {
+        locale = req.query.locale
+    }
+
+    console.log(`locale = ${locale}`)
     let iFetcher = getFetcher(req)
 
     refresh(forceAll, index, iFetcher)
@@ -42,7 +135,18 @@ exports.refreshNew = (req, res) => {
             let list, totalNum
             list = iFetcher.getLocalList()
             totalNum = iFetcher.getTotalNum()
-            console.log("Refreshed succeed")
+            let newLength = Object.keys(list).length
+            console.log(`Refreshed succeed totalNum ${totalNum}, newLength ${newLength}, cacheNum ${iFetcher.cachedNum}`)
+            if (iFetcher.cachedNum < newLength) {
+                iFetcher.cachedNum = newLength
+                fs.writeFile(`./db/${locale}.json`, JSON.stringify(Object.values(iFetcher.getLocalList())), err => {
+                    if (err) {
+                        console.error(err)
+                        return
+                    }
+                })
+            }
+
             res.status = 200
             if (index != -1) {
                 res.send(`Comic No.${index} has been updated. ${JSON.stringify(results)}`)

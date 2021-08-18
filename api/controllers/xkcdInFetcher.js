@@ -9,6 +9,9 @@ const xkcdCNUrl = "https://xkcd.in/"
 
 var totalNum
 var cnList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "cn"
 
 exports.getLocalList = () => cnList
 

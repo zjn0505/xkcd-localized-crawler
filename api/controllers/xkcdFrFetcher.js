@@ -12,6 +12,9 @@ const xkcdFrArchiveUrl = "https://xkcd.lapin.org/tous-episodes.php"
 
 var totalNum
 var frList = {}
+exports.cachedNum = 0
+
+exports.tag = () => "fr"
 
 exports.getLocalList = () => frList
 
