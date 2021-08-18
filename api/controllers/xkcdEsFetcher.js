@@ -13,8 +13,6 @@ exports.getLocalList = () => esList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrlES
-
 const extractInfoFromSinglePage = $ => {
 	const node = $("#middleContent img")
 	var num

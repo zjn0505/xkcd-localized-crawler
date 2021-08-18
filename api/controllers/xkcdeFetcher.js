@@ -13,8 +13,6 @@ exports.getLocalList = () => deList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrlDE
-
 const extractLatestIndexFromMainUrl = $ => {
 	const max = parseInt($(".center a").text().split("#")[1])
 	console.log("Max index = " + max)

@@ -14,8 +14,6 @@ exports.getLocalList = () => cnList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrl
-
 // parse xkcd.in html for total pages
 const extractTotalIndicesFromMainHtml = $ => {
 	totalNum = parseInt($("span.counts", "h4.main-header").text()) // Total 179 comics

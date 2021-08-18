@@ -13,8 +13,6 @@ exports.getLocalList = () => cnList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrlTW
-
 // parse xkcd.tw html for raw archive
 const extractRawArchiveFromMainHtml = $ => {
 	console.log("WebPage fetched")

@@ -15,8 +15,6 @@ exports.getLocalList = () => ruList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrlRU
-
 const extractRealFromNumUrl = $ => {
 	let indexList = $(".real a").map((index, it) => parseInt(it.firstChild.data)).toArray()
 	totalNum = indexList.length

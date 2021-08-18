@@ -17,8 +17,6 @@ exports.getLocalList = () => frList
 
 exports.getTotalNum = () => totalNum
 
-exports.mLabUrl = config.mLabUrlFR
-
 const extractEpisodesFromArchiveUrl = $ => {
 	let indexList = $("#content .s").html().trim().split("&#xA0;&#xA0;").map(cheerio.load).map(it => it("a").attr().href.split("number=")[1])
 	indexList.pop(1)

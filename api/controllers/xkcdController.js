@@ -8,49 +8,7 @@ const rp = require("request-promise"),
     xkcdEsFetcher = require('./xkcdEsFetcher'),
     xkcdRuFetcher = require('./xkcdRuFetcher')
 
-const mLabUrl = config.mLabUrl
-
-const execMLabSave = (jsonarray, iFetcher) => {
-    let upsertUrl = iFetcher.mLabUrl + `&q={"_id":{"$in":[${jsonarray.map(x => '"'+x._id+'"')}]}}` // TODO Stupid String convert
-    console.log(upsertUrl)
-
-    const options = {
-        method: 'PUT',
-        uri: upsertUrl,
-        body: jsonarray,
-        json: true
-    };
-    rp(options).then(body => {
-            console.log(body)
-        })
-        .catch(e => {
-            console.error("Failed to save to mLab")
-            console.error(e)
-        })
-}
-
-const saveToMLab = (jsonarray, iFetcher) => {
-    if (jsonarray == null || jsonarray == undefined || jsonarray.length == 0) {
-        return Promise.resolve()
-    }
-    console.log("Find sth new")
-    console.log(jsonarray)
-    var processArray = jsonarray
-    if (jsonarray.length > 300) {
-        var remainArray
-        while (processArray.length > 300) {
-            remainArray = processArray.splice(300)
-            execMLabSave(processArray, iFetcher)
-            processArray = remainArray
-        }
-    }
-    execMLabSave(processArray, iFetcher)
-    return jsonarray
-}
-
 const refresh = (forceAll, index, iFetcher) => iFetcher.refresh(forceAll, index)
-    .then(jsonArray => saveToMLab(jsonArray, iFetcher))
-// .catch(console.error)
 
 const getFetcher = req => {
     let iFetcher
@@ -68,54 +26,6 @@ const getFetcher = req => {
         iFetcher = xkcdInFetcher
     }
     return iFetcher
-}
-
-exports.updateLocalListFromMLab = () => {
-    var requests = Object.keys(config)
-        .filter(key => key.startsWith("mLabUrl"))
-        .map(key => config[key])
-        .map(mLabUrl => {
-            return {
-                uri: mLabUrl,
-                json: true
-            }
-        }).map(rp)
-    Promise.all(requests)
-        .then(x => {
-            x.forEach((results, index) => {
-                if (results && results instanceof Array) {
-                    var region = "CN"
-                    if (index == 1) {
-                        region = "TW"
-                    } else if (index == 2) {
-                        region = "DE"
-                    } else if (index == 3) {
-                        region = "FR"
-                    } else if (index == 4) {
-                        region = "ES"
-                    } else if (index == 5) {
-                        region = "RU"
-                    }
-                    console.log("LIST " + region + " " + results.length)
-                }
-                console.log("Sync with mLab finished")
-                results.map(it => {
-                    if (index == 0) {
-                        xkcdInFetcher.getLocalList()[it.num] = it
-                    } else if (index == 1) {
-                        xkcdTwFetcher.getLocalList()[it.num] = it
-                    } else if (index == 2) {
-                        xkcdeFetcher.getLocalList()[it.num] = it
-                    } else if (index == 3) {
-                        xkcdFrFetcher.getLocalList()[it.num] = it
-                    } else if (index == 4) {
-                        xkcdEsFetcher.getLocalList()[it.num] = it
-                    } else if (index == 5) {
-                        xkcdRuFetcher.getLocalList()[it.num] = it
-                    }
-                })
-            })
-        }).catch(console.error)
 }
 
 exports.refreshNew = (req, res) => {

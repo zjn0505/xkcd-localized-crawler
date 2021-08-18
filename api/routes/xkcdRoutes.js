@@ -3,9 +3,6 @@
 const xkcdReqs = require('../controllers/xkcdController')
 
 exports.route = app => {
-
-    xkcdReqs.updateLocalListFromMLab()
-
     app.route('/refresh')
         .get(xkcdReqs.refreshNew)
 
